@@ -1,8 +1,6 @@
-import datetime
 import hashlib
-from pwn import *
 import re
-import time
+from pwn import *
 
 def escape_ansi(line):
   ansi_regex = r'\x1b(' \
@@ -25,14 +23,11 @@ def escape_ansi(line):
 def encrypt(key, text):
   return hashlib.sha1(key+text).hexdigest()
 
-lying_text="But I could be lying, check that the following MAC hash equals the following:"
 key_text="This round's shared key is"
 send_text="Send me a message:"
 mac_text="Enter your MAC:"
-flag_text="flag[93m#[92m#[91m#[0m"
 response_text="Response:\n"
-
-# keys = ['palm_leaves', 'susageP','skeletor','monkey','segfault','basement','sausage', 'helicopters', 'skeletor', 'bananarama']
+lying_text="But I could be lying, check that the following MAC hash equals the following:"
 
 r = remote('plsdonthaq.me', 9004)
 
@@ -43,13 +38,19 @@ while True:
   key = escape_ansi(key.rstrip())
   r.recvuntil(send_text)
   r.recvline()
-  print(key)
-  text = key
-  e = encrypt(key, text)
+
+  # server will go through the actual flag
+  # if the next message has the character in the flag
+  # then it will give the correct flag for the next word
+  # if the message doesnt have the character, it will
+  # lower the chance of getting the correct flag letter
+  # until the chances of getting any correct letter is 0
+  text = "COMP6441\{n0w_yoU_kNow_hOw_MaCs_WorK_nice_pRogr4mMing\}"
+  text_hashed = encrypt(key, text)
+
   r.sendline(text)
-  r.recvuntil(mac_text)
   r.recvline()
-  r.sendline(e)
+  r.sendline(text_hashed)
   r.recvline()
   r.recvuntil(response_text)
   r.recvline()
@@ -60,11 +61,12 @@ while True:
   r.recvline()
   r.recvline()
   r.recvline()
-  h = r.recvline()
-  h = h.rstrip()
-  if str(encrypt(key, flag)) == h:
-    print flag
-    # keys.append(key[::-1])
-    # keys.append(key)
-    with open("a.txt", "a") as myfile:
+  flag_hashed = r.recvline()
+  flag_hashed = flag_hashed.rstrip()
+
+  if str(encrypt(key, flag)) == flag_hashed:
+    print(flag)
+    
+    # cat capture.txt | sort -n -k 4,4 | uniq 
+    with open("capture.txt", "a+") as myfile:
       myfile.write(flag+'\n')
